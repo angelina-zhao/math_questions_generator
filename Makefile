@@ -9,7 +9,6 @@ target_and_run:
 .PHONY: clean
 clean:
 	@echo "Start to clean..."
-	if exist 
 	rm $(SRC).exe
 	@echo "Clean completed"
 

@@ -1,20 +1,9 @@
 #include <string.h>
 #include <time.h>  
 #include <stdio.h>  
-#include <stdlib.h>  
+#include <stdlib.h>
 
-struct settings_ {
-	int is_rnd_initialed;
-};
-
-struct question {
-	int operator[3];
-	int number[4];
-	int answer;
-	int checksum[2];
-};
-
-#define MAX_QUEST_NUM	10010
+#include “quest.h”
 
 struct settings_ g_settings;
 
