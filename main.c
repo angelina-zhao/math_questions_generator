@@ -264,7 +264,6 @@ int generate_one_exercise_2(struct question *q) {
 	return 0;
 }
 
-
 /* one XX plus/minus X with flag*/
 int generate_exercises_2(struct question *q, int size) {
 	int i;
