@@ -3,7 +3,9 @@
 #include <stdio.h>  
 #include <stdlib.h>
 
-#include “quest.h”
+#include "quest.h"
+
+#define MAX_QUEST_NUM	560
 
 struct settings_ g_settings;
 
@@ -87,7 +89,10 @@ int print_one_question(struct question * q, int num_sz) {
 	printf("     %2d\n", q->number[0]);
 	for (i = 0; i < num_sz - 1; i++) {
 		if (q->operator[i] == 1) {
-			printf("     -%d\n", q->number[i + 1]);
+			if (q->number[i + 1] > 10)
+				printf("    -%2d\n", q->number[i + 1]);
+			else
+				printf("     -%2d\n", q->number[i + 1]);
 		} else {
 			printf("     %2d\n", q->number[i + 1]);
 		}
@@ -216,10 +221,10 @@ int generate_exercises_4() {
 }
 
 
-int generate_one_exercise_2(struct question *q) {
+int generate_one_exercise_2_1(struct question *q) {
 	int number_1, number_2;
 	double limit;
-	int sign, exchange;
+	int sign;
 	int sum, checksum;
 
 	if((!g_settings.is_rnd_initialed) || !q)
@@ -253,7 +258,6 @@ int generate_one_exercise_2(struct question *q) {
 	if ((sum < 0) || (sum > 100))
 		return -2;
 
-	exchange = get_rnd(0.0, 2.0);
 	q->operator[0] = sign;
 	q->number[0] = number_1;
 	q->number[1] = number_2;
@@ -265,13 +269,13 @@ int generate_one_exercise_2(struct question *q) {
 }
 
 /* one XX plus/minus X with flag*/
-int generate_exercises_2(struct question *q, int size) {
+int generate_exercises_2_1(struct question *q, int size) {
 	int i;
 	int ret;
 
 	i = 0;
 	do {
-		ret = generate_one_exercise_2(&q[i]);
+		ret = generate_one_exercise_2_1(&q[i]);
 		if (ret < 0) {
 			if (ret == -2)
 				continue;
@@ -283,6 +287,81 @@ int generate_exercises_2(struct question *q, int size) {
 			return -1;
 		}
 		//printf("[%05d] %2d %c %2d = %d\n", i, q[i].number[0], (q[i].operator[0] == 0) ? '+':'-', q[i].number[1], q[i].answer);
+		i++;
+	} while(i < size);
+
+	return 0;	
+}
+
+int generate_one_exercise_2_2(struct question *q) {
+	int number_1, number_2;
+	double limit;
+	int sign;
+	int sum, checksum;
+
+	if((!g_settings.is_rnd_initialed) || !q)
+		return -1;
+
+	number_1 = get_rnd(9.5, 100.0);
+
+	//Check the possibility of the sign.
+	int units = number_1 % 10;
+	if (units == 9) {
+		sign = 0;
+	} else if( units == 0 || units == 1) {
+		sign = 1;
+	} else {
+		sign = -1;
+	}
+	if (sign == -1) {
+		sign = get_rnd(0.0, 2.0);
+	}
+
+	if (sign == 0) {
+		limit = (100.0 - number_1 + 0.5);
+	} else {
+		limit = number_1;
+	}
+	if (limit < 10.5)
+		return -2;
+
+	number_2 = get_rnd(9.5, limit);
+
+	sum = (sign == 0) ? (number_1 + number_2) : (number_1 - number_2);
+	if ((sum < 0) || (sum > 100))
+		return -2;
+
+	q->operator[0] = sign;
+	q->number[0] = number_1;
+	q->number[1] = number_2;
+	q->checksum[0] = (sum % 10) *  (sum / 10);
+	q->checksum[1] = (sum % 10) +  (sum / 10);
+	q->answer = sum;
+
+	return 0;
+}
+
+
+/* one XX plus/minus XX with flag*/
+int generate_exercises_2_2(struct question *q, int size) {
+	int i, sum_check;
+	int ret;
+
+	i = 0;
+	do {
+		ret = generate_one_exercise_2_2(&q[i]);
+		if (ret < 0) {
+			if (ret == -2)
+				continue;
+			else
+				return ret;
+		}
+
+		sum_check = (q[i].operator == 0) ? (q[i].number[0] + (q[i].number[1] % 10)) : (q[i].number[0] - (q[i].number[1] % 10));
+		if ((sum_check / 10) == (q[i].number[0] / 10)) {
+			continue;
+		}
+//		printf("[%05d] %2d %c %2d = %d\n", i, q[i].number[0], (q[i].operator[0] == 0) ? '+':'-', q[i].number[1], q[i].answer);
 		i++;
 	} while(i < size);
 
@@ -320,7 +399,7 @@ int main() {
 	if (ret < 0)
 		return ret;
 
-	ret = generate_exercises_2(q, sizeof(q) / sizeof(struct question));
+	ret = generate_exercises_2_2(q, sizeof(q) / sizeof(struct question));
 	if (ret < 0)
 		return ret;
 
